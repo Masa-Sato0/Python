@@ -1,68 +1,133 @@
 <!doctype html>
-<html lang="ja">
+<html lang="ja" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Python はじめてエディタ</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/eclipse.min.css" />
-    <link rel="stylesheet" href="styles.css" />
+    <meta name="theme-color" content="#f7f8f4" />
+    <title>Math Recall｜高校数学の復習管理</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <header class="app-header">
-      <div>
-        <p class="eyebrow">ブラウザだけで学べる</p>
-        <h1>Python はじめてエディタ</h1>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="Math Recall ホーム">
+        <span class="brand-mark" aria-hidden="true">MR</span>
+        <span><strong>Math Recall</strong><small>高校数学の復習管理</small></span>
+      </a>
+      <div class="header-actions">
+        <button id="data-button" class="button button-ghost" type="button">データ管理</button>
+        <button id="theme-button" class="icon-button" type="button" aria-label="ダークモードに切り替え" title="表示テーマを切り替え">☾</button>
+        <button class="button button-primary js-add" type="button">＋ 問題を登録</button>
       </div>
-      <p class="header-note">コードを書いて「実行」を押すだけ。結果は下に表示されます。</p>
     </header>
 
-    <main class="app-layout">
-      <section class="problem-panel" aria-labelledby="problem-title">
-        <div class="panel-heading">
-          <p class="eyebrow">問題</p>
-          <p id="problem-count" class="problem-count"></p>
+    <main id="top" class="page-shell">
+      <section class="hero" aria-labelledby="today-heading">
+        <div>
+          <p id="today-label" class="date-label"></p>
+          <h1 id="today-heading">今日復習する問題</h1>
+          <p id="today-message" class="hero-copy">今日の復習を確認しています。</p>
         </div>
-        <h2 id="problem-title"></h2>
-        <p id="problem-text" class="problem-text"></p>
-
-        <div class="learning-buttons">
-          <button id="hint-button" class="secondary-button" type="button">ヒント</button>
-          <button id="answer-button" class="secondary-button" type="button">解答例を見る</button>
-          <button id="next-button" class="secondary-button" type="button">次の問題</button>
-        </div>
-
-        <div id="hint-box" class="message-box" hidden></div>
-        <pre id="answer-box" class="answer-box" hidden></pre>
+        <button id="start-review" class="button button-light" type="button">今日の復習を始める <span>→</span></button>
       </section>
 
-      <section class="editor-panel" aria-labelledby="editor-title">
-        <div class="editor-toolbar">
-          <div>
-            <p class="eyebrow">コード入力</p>
-            <h2 id="editor-title">ここに Python コードを書きます</h2>
+      <section class="metrics" aria-label="学習状況">
+        <article><span class="metric-icon blue">▦</span><div><strong id="metric-total">0</strong><span>登録問題</span></div></article>
+        <article><span class="metric-icon green">✓</span><div><strong id="metric-today">0</strong><span>今日の復習</span></div></article>
+        <article><span class="metric-icon red">!</span><div><strong id="metric-overdue">0</strong><span>期限超過</span></div></article>
+        <article><span class="metric-icon amber">△</span><div><strong id="metric-weak">0</strong><span>苦手問題</span></div></article>
+        <article><span class="metric-icon purple">7</span><div><strong id="metric-week">0</strong><span>今週の予定</span></div></article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel due-panel">
+          <div class="section-heading">
+            <div><p class="kicker">PRIORITY</p><h2>今日の復習リスト</h2></div>
+            <span id="due-count" class="count-pill">0問</span>
           </div>
-          <div class="action-buttons">
-            <button id="reset-button" class="secondary-button" type="button">コードをリセット</button>
-            <button id="run-button" class="primary-button" type="button">実行</button>
+          <div id="due-list" class="card-list"></div>
+        </article>
+        <article class="panel mastery-panel">
+          <div class="section-heading"><div><p class="kicker">PROGRESS</p><h2>理解度の分布</h2></div></div>
+          <div id="mastery-chart" class="mastery-chart"></div>
+          <div class="legend-note">理解度は直近の復習結果を表示します</div>
+        </article>
+      </section>
+
+      <section class="panel calendar-panel" aria-labelledby="calendar-heading">
+        <div class="section-heading calendar-heading">
+          <div><p class="kicker">REVIEW CALENDAR</p><h2 id="calendar-heading">復習カレンダー</h2></div>
+          <div class="calendar-controls">
+            <div class="view-switch" aria-label="カレンダー表示">
+              <button class="active" type="button" data-calendar-view="week" aria-pressed="true">週</button>
+              <button type="button" data-calendar-view="month" aria-pressed="false">月</button>
+            </div>
+            <button id="calendar-prev" class="icon-button" type="button" aria-label="前の期間">‹</button>
+            <button id="calendar-today" class="small-button" type="button">今日</button>
+            <button id="calendar-next" class="icon-button" type="button" aria-label="次の期間">›</button>
           </div>
         </div>
+        <div class="calendar-period"><strong id="calendar-period-label"></strong><span><i class="calendar-dot overdue-dot"></i>期限超過 <i class="calendar-dot due-dot"></i>復習予定</span></div>
+        <div id="calendar" class="calendar" aria-live="polite"></div>
+      </section>
 
-        <textarea id="code-editor">print("Hello, Python!")</textarea>
-
-        <div class="output-area" aria-live="polite">
-          <div class="output-heading">
-            <h2>実行結果</h2>
-            <span id="status-label" class="status-label">Pyodideを読み込み中...</span>
-          </div>
-          <pre id="output-box" class="output-box">準備ができたら「実行」を押してください。</pre>
+      <section class="panel library-panel" aria-labelledby="library-heading">
+        <div class="section-heading library-heading">
+          <div><p class="kicker">ALL PROBLEMS</p><h2 id="library-heading">問題一覧</h2></div>
+          <button class="button button-primary js-add" type="button">＋ 新しい問題</button>
         </div>
+        <div class="filters">
+          <label class="search-field"><span aria-hidden="true">⌕</span><input id="search" type="search" placeholder="問題番号・タイトル・単元を検索" /></label>
+          <select id="filter-subject" aria-label="科目で絞り込み"><option value="">すべての科目</option></select>
+          <select id="filter-unit" aria-label="単元で絞り込み"><option value="">すべての単元</option></select>
+          <select id="filter-level" aria-label="理解度で絞り込み"><option value="">すべての理解度</option></select>
+          <select id="filter-status" aria-label="状態で絞り込み">
+            <option value="">すべての状態</option><option value="weak">苦手問題</option><option value="today">今日復習</option><option value="overdue">期限超過</option>
+          </select>
+        </div>
+        <div id="problem-list" class="problem-list"></div>
       </section>
     </main>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.4/full/pyodide.js"></script>
-    <script src="app.js"></script>
+    <dialog id="problem-dialog" class="dialog">
+      <form id="problem-form" method="dialog">
+        <div class="dialog-header"><div><p class="kicker">PROBLEM</p><h2 id="form-title">問題を登録</h2></div><button class="dialog-close" value="cancel" aria-label="閉じる">×</button></div>
+        <input id="problem-id" type="hidden" />
+        <div class="form-grid">
+          <label>問題番号 <span>*</span><input id="number" required maxlength="30" placeholder="例：例題 42" /></label>
+          <label>問題タイトル <span>*</span><input id="title" required maxlength="100" placeholder="例：二次関数の最大・最小" /></label>
+          <label>科目 <span>*</span><select id="subject" required></select></label>
+          <label>青チャートの単元 <span>*</span><input id="unit" required maxlength="80" list="unit-options" autocomplete="off" placeholder="単元名を入力して検索" /><datalist id="unit-options"></datalist><small class="field-hint">科目を選ぶと候補を絞り込めます</small></label>
+          <label>初回の理解度 <span>*</span><select id="initial-level" required></select></label>
+          <label>初回登録日 <span>*</span><input id="created-date" type="date" required /></label>
+          <label class="wide">問題についてのメモ<textarea id="notes" rows="4" maxlength="1000" placeholder="つまずいた箇所、次回確認するポイントなど"></textarea></label>
+        </div>
+        <div class="dialog-actions"><button class="button button-ghost" value="cancel" type="button" data-close>キャンセル</button><button class="button button-primary" value="default" type="submit">保存する</button></div>
+      </form>
+    </dialog>
+
+    <dialog id="review-dialog" class="dialog review-dialog">
+      <div class="dialog-header"><div><p class="kicker">REVIEW SESSION</p><h2 id="review-title"></h2></div><button class="dialog-close" data-review-close aria-label="閉じる">×</button></div>
+      <div id="review-meta" class="review-meta"></div>
+      <div id="review-note" class="review-note"></div>
+      <div class="history-section"><h3>これまでの理解度</h3><div id="history-list" class="history-list"></div></div>
+      <div class="rating-section">
+        <h3>今回どのくらい理解できた？</h3><p>最も近い状態を選ぶと、次の復習日を自動計算します。</p>
+        <div id="rating-buttons" class="rating-buttons"></div>
+      </div>
+    </dialog>
+
+    <dialog id="data-dialog" class="dialog compact-dialog">
+      <div class="dialog-header"><div><p class="kicker">BACKUP</p><h2>データ管理</h2></div><button class="dialog-close" data-data-close aria-label="閉じる">×</button></div>
+      <p class="muted">データはこのブラウザの localStorage に保存されています。端末移行や定期バックアップにはJSONファイルをご利用ください。</p>
+      <div class="data-actions">
+        <button id="export-data" class="button button-primary" type="button">JSONを書き出す</button>
+        <label class="button button-ghost file-button">JSONを読み込む<input id="import-data" type="file" accept="application/json,.json" /></label>
+        <button id="load-samples" class="button button-ghost" type="button">サンプルデータを追加</button>
+      </div>
+      <p id="data-message" class="form-message" aria-live="polite"></p>
+    </dialog>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="script.js"></script>
   </body>
 </html>
